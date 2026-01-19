@@ -32,23 +32,28 @@ const ArPage: React.FC = () => {
       return;
     }
 
-    try {
-      // 버킷이 public이면 getPublicUrl 그대로 사용
-      const { data } = supabase.storage
-        .from('models')
-        .getPublicUrl(key);
+    const fetchUrl = async () => {
+      try {
+        // 서명 URL을 생성하여 외부(구글 Scene Viewer)에서도 접근 가능하게 함
+        const { data, error } = await supabase.storage
+          .from('models')
+          .createSignedUrl(key, 60 * 60); // 1시간 유효
 
-      if (!data?.publicUrl) {
-        setError('모델을 불러올 수 없습니다.');
-      } else {
-        setModelUrl(data.publicUrl);
+        if (error || !data?.signedUrl) {
+          console.error(error);
+          setError('모델을 불러올 수 없습니다.');
+        } else {
+          setModelUrl(data.signedUrl);
+        }
+      } catch (e) {
+        console.error(e);
+        setError('모델을 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error(e);
-      setError('모델을 불러오는 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    fetchUrl();
   }, [location.search]);
 
   // Android용 Scene Viewer 링크 생성
