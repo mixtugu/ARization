@@ -66,6 +66,32 @@ const UploadPage: React.FC = () => {
         throw new Error('업로드 실패');
       }
 
+      // glb 파일인 경우, 서버에 usdz 변환 요청
+      const lowerSafeName = safeName.toLowerCase();
+      const isGlb = lowerSafeName.endsWith('.glb');
+
+      if (isGlb) {
+        try {
+          const apiBase =
+            (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+            window.location.origin;
+
+          await fetch(`${apiBase.replace(/\/$/, '')}/api/convert-usdz`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bucket: 'models',
+              key: fileName, // 예: 1768...__.glb
+              // 필요하다면 추가 메타데이터를 여기에 포함
+            }),
+          });
+        } catch (convertError) {
+          console.error('usdz 변환 요청 중 오류 발생(업로드 자체는 완료됨):', convertError);
+        }
+      }
+
       const urlForShare = `${window.location.origin}/#/ar?key=${encodeURIComponent(fileName)}`;
       setShareUrl(urlForShare);
     } catch (e) {
