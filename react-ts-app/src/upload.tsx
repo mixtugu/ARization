@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
-import '@google/model-viewer';
 import QRCode from 'react-qr-code';
 import { createClient } from '@supabase/supabase-js';
-
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'model-viewer': any;
-    }
-  }
-}
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
@@ -169,12 +160,27 @@ const UploadPage: React.FC = () => {
           >
             PC 미리보기
           </h2>
-          <model-viewer
-            src={previewURL}
-            camera-controls
-            auto-rotate
-            style={{ width: '100%', height: '50vh', background: '#999' }}
-          ></model-viewer>
+          <div
+            style={{
+              width: '100%',
+              height: '50vh',
+              background: '#f0f0f0',
+              borderRadius: '8px',
+              border: '1px solid #ddd',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              padding: '16px',
+              boxSizing: 'border-box',
+            }}
+          >
+            <p style={{ margin: 0, fontSize: '14px', color: '#555' }}>
+              현재 PC 브라우저에서는 3D 모델 실시간 미리보기를 제공하지 않습니다.
+              <br />
+              모바일에서 QR코드를 스캔하여 AR로 확인해 주세요.
+            </p>
+          </div>
         </div>
       )}
 
