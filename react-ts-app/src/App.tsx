@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import './App.css'
 import Header from './Header'
 import UploadPage from './upload'
@@ -38,14 +38,14 @@ function HomePage() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Header />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/ar" element={<ArPage />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
