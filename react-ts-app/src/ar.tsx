@@ -28,7 +28,7 @@ const ArPage: React.FC = () => {
     const key = searchParams.get('key');
 
     if (!key) {
-      setError('모델 정보가 없습니다. 유효한 링크인지 확인해 주세요.');
+      setError('モデル情報がありません。有効なリンクか確認してください。');
       setLoading(false);
       return;
     }
@@ -42,7 +42,7 @@ const ArPage: React.FC = () => {
 
         if (error || !data?.signedUrl) {
           console.error(error);
-          setError('모델을 불러올 수 없습니다.');
+          setError('モデルを読み込むことができません。');
         } else {
           setModelUrl(data.signedUrl);
 
@@ -60,7 +60,7 @@ const ArPage: React.FC = () => {
         }
       } catch (e) {
         console.error(e);
-        setError('모델을 불러오는 중 오류가 발생했습니다.');
+        setError('モデル読み込み中にエラーが発生しました。');
       } finally {
         setLoading(false);
       }
@@ -83,18 +83,65 @@ const ArPage: React.FC = () => {
     return (
       <main
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 24px',
-          gap: '16px',
+          minHeight: '100vh',
           width: '100%',
-          height: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 0,
+          background:
+            'radial-gradient(circle at top left, #f5f7ff 0, #eef3ff 32%, #fdfbff 65%, #ffffff 100%)',
           boxSizing: 'border-box',
         }}
       >
-        <p>모델을 불러오는 중...</p>
+        <div
+          style={{
+            width: 'min(560px, 92vw)',
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 18px 45px rgba(15, 23, 42, 0.12)',
+            padding: '22px 20px',
+            boxSizing: 'border-box',
+            textAlign: 'center',
+          }}
+        >
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '4px 10px',
+              borderRadius: '999px',
+              backgroundColor: '#f1f5f9',
+              marginBottom: '12px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '11px',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: '#475569',
+                fontWeight: 600,
+              }}
+            >
+              AR PREVIEW
+            </span>
+          </div>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: '18px',
+              color: '#0f172a',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            モデルを読み込んでいます...
+          </h1>
+          <p style={{ margin: '10px 0 0', fontSize: '13px', color: '#64748b' }}>
+            ネットワーク状況により少し時間がかかる場合があります。
+          </p>
+        </div>
       </main>
     );
   }
@@ -103,48 +150,121 @@ const ArPage: React.FC = () => {
     return (
       <main
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: '40px 24px',
-          gap: '16px',
+          minHeight: '100vh',
           width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 0,
+          background:
+            'radial-gradient(circle at top left, #f5f7ff 0, #eef3ff 32%, #fdfbff 65%, #ffffff 100%)',
           boxSizing: 'border-box',
         }}
       >
-        <h1 style={{ margin: 0, fontSize: '24px' }}>AR 미리보기</h1>
-        <p style={{ margin: 0, color: '#555', textAlign: 'center' }}>
-          {error || '불러올 3D 모델이 없습니다. 유효한 링크인지 확인해 주세요.'}
-        </p>
-
-        <button
-          type="button"
-          onClick={() => navigate('/upload')}
+        <div
           style={{
-            marginTop: '12px',
-            padding: '12px 24px',
-            fontSize: '16px',
-            cursor: 'pointer',
-            width: '100%',
-            maxWidth: '400px',
+            width: 'min(720px, 92vw)',
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 18px 45px rgba(15, 23, 42, 0.12)',
+            padding: '24px 22px 22px',
+            boxSizing: 'border-box',
           }}
         >
-          업로드로 가기
-        </button>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '10px',
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '4px 10px',
+                borderRadius: '999px',
+                backgroundColor: '#fef2f2',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '11px',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: '#b91c1c',
+                  fontWeight: 700,
+                }}
+              >
+                ERROR
+              </span>
+            </div>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>AR Preview</span>
+          </div>
 
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          style={{
-            padding: '12px 24px',
-            fontSize: '16px',
-            cursor: 'pointer',
-            width: '100%',
-            maxWidth: '400px',
-          }}
-        >
-          홈으로
-        </button>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: '22px',
+              lineHeight: 1.35,
+              letterSpacing: '-0.02em',
+              color: '#0f172a',
+            }}
+          >
+            ARプレビューを開くことができません。
+          </h1>
+          <p
+            style={{
+              margin: '10px 0 0',
+              fontSize: '14px',
+              color: '#64748b',
+            }}
+          >
+            {error || '読み込む3Dモデルがありません。有効なリンクか確認してください。'}
+          </p>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '18px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => navigate('/upload')}
+              style={{
+                padding: '12px 16px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                borderRadius: '999px',
+                border: 'none',
+                background:
+                  'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #4f46e5 100%)',
+                color: '#ffffff',
+                fontWeight: 600,
+                boxShadow: '0 10px 22px rgba(37, 99, 235, 0.30)',
+                flex: '1 1 220px',
+              }}
+            >
+              アップロードへ戻る
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              style={{
+                padding: '12px 16px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                borderRadius: '999px',
+                border: '1px solid #d1d5db',
+                background: '#ffffff',
+                color: '#0f172a',
+                fontWeight: 600,
+                flex: '1 1 160px',
+              }}
+            >
+              ホームへ戻る
+            </button>
+          </div>
+        </div>
       </main>
     );
   }
@@ -152,145 +272,226 @@ const ArPage: React.FC = () => {
   return (
     <main
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '24px',
-        gap: '16px',
+        minHeight: '100vh',
         width: '100%',
+        padding: 0,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background:
+          'radial-gradient(circle at top left, #f5f7ff 0, #eef3ff 32%, #fdfbff 65%, #ffffff 100%)',
         boxSizing: 'border-box',
       }}
     >
-      <h1 style={{ margin: 0, fontSize: '24px' }}>AR 미리보기</h1>
-
-      {/* Android: Scene Viewer로 AR 실행 */}
-      {isAndroid && (
-        <>
-          <p style={{ margin: 0, textAlign: 'center' }}>
-            아래 버튼을 눌러 AR 모드로 확인해 주세요.
-          </p>
-          <a
-            href={buildAndroidHref(modelUrl)}
-            rel="ar"
+      <div
+        style={{
+          width: 'min(880px, 92vw)',
+          backgroundColor: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 18px 45px rgba(15, 23, 42, 0.12)',
+          padding: '24px 22px 22px',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '14px',
+          }}
+        >
+          <div
             style={{
-              marginTop: '12px',
-              padding: '12px 24px',
-              fontSize: '16px',
-              textDecoration: 'none',
-              borderRadius: '8px',
-              border: '1px solid #333',
-              maxWidth: '400px',
-              width: '100%',
-              textAlign: 'center',
-              boxSizing: 'border-box',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '4px 10px',
+              borderRadius: '999px',
+              backgroundColor: '#f1f5f9',
             }}
           >
-            Android에서 AR로 보기
-          </a>
-        </>
-      )}
+            <span
+              style={{
+                fontSize: '11px',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: '#475569',
+                fontWeight: 600,
+              }}
+            >
+              AR PREVIEW
+            </span>
+          </div>
+          <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+            Android: Scene Viewer · iOS: Quick Look
+          </span>
+        </div>
 
-      {/* iOS: Quick Look(usdz) 지원 */}
-      {isIOS && (
-        <div
+        <h1
           style={{
-            marginTop: '12px',
-            padding: '16px',
-            borderRadius: '8px',
-            border: '1px solid #ddd',
-            maxWidth: '500px',
-            width: '100%',
-            boxSizing: 'border-box',
+            margin: 0,
+            fontSize: '22px',
+            lineHeight: 1.35,
+            letterSpacing: '-0.02em',
+            color: '#0f172a',
           }}
         >
-          {usdzUrl ? (
-            <>
-              <p style={{ margin: 0, textAlign: 'center', fontSize: '14px' }}>
-                아래 버튼을 눌러 iOS AR Quick Look에서 모델을 확인할 수 있습니다.
-              </p>
-              <a
-                href={usdzUrl}
-                rel="ar"
-                style={{
-                  marginTop: '12px',
-                  display: 'block',
-                  padding: '12px 24px',
-                  fontSize: '16px',
-                  textDecoration: 'none',
-                  borderRadius: '8px',
-                  border: '1px solid #333',
-                  maxWidth: '400px',
-                  width: '100%',
-                  textAlign: 'center',
-                  boxSizing: 'border-box',
-                }}
-              >
-                iOS에서 AR로 보기
-              </a>
-            </>
-          ) : (
-            <p style={{ margin: 0, textAlign: 'center', fontSize: '14px' }}>
-              현재 iOS AR Quick Look은 <code>usdz</code> 형식을 사용합니다.
-              <br />
-              이 모델과 동일한 이름의 <code>.usdz</code> 파일이 준비되면,
-              <br />
-              iPhone에서도 바로 AR 보기 버튼이 제공됩니다.
+          モバイルでARを確認
+        </h1>
+        <p style={{ margin: '10px 0 0', fontSize: '13px', color: '#64748b' }}>
+          ご利用のデバイスに合わせてARモードを起動してください。
+        </p>
+
+        {/* Android */}
+        {isAndroid && (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
+              background: '#f8fafc',
+            }}
+          >
+            <p style={{ margin: 0, textAlign: 'center', fontSize: '13px', color: '#475569' }}>
+              下のボタンを押して<strong>Google Scene Viewer</strong>でARを起動してください。
             </p>
-          )}
+            <a
+              href={buildAndroidHref(modelUrl)}
+              rel="ar"
+              style={{
+                marginTop: '12px',
+                display: 'block',
+                padding: '12px 16px',
+                fontSize: '14px',
+                textDecoration: 'none',
+                borderRadius: '999px',
+                border: 'none',
+                background:
+                  'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #4f46e5 100%)',
+                color: '#ffffff',
+                fontWeight: 700,
+                textAlign: 'center',
+                boxShadow: '0 10px 22px rgba(37, 99, 235, 0.30)',
+              }}
+            >
+              AndroidでAR起動
+            </a>
+            <p style={{ margin: '10px 0 0', fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>
+              ARが起動しない場合はChromeで開いてください。
+            </p>
+          </div>
+        )}
+
+        {/* iOS */}
+        {isIOS && (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
+              background: '#f8fafc',
+            }}
+          >
+            {usdzUrl ? (
+              <>
+                <p style={{ margin: 0, textAlign: 'center', fontSize: '13px', color: '#475569' }}>
+                  下のボタンを押して<strong>AR Quick Look</strong>でモデルを確認してください。
+                </p>
+                <a
+                  href={usdzUrl}
+                  rel="ar"
+                  style={{
+                    marginTop: '12px',
+                    display: 'block',
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    textDecoration: 'none',
+                    borderRadius: '999px',
+                    border: '1px solid #d1d5db',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    fontWeight: 700,
+                    textAlign: 'center',
+                  }}
+                >
+                  iOSでAR起動
+                </a>
+                <p style={{ margin: '10px 0 0', fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>
+                  Safariで開くと最も安定して動作します。
+                </p>
+              </>
+            ) : (
+              <p style={{ margin: 0, textAlign: 'center', fontSize: '13px', color: '#475569' }}>
+                iOSのAR Quick Lookは<code>usdz</code>形式を使用します。
+                <br />
+                同じ名前の<code>.usdz</code>が用意されていれば、iPhoneでもすぐにAR起動ボタンが表示されます。
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Desktop/Other */}
+        {!isAndroid && !isIOS && (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
+              background: '#f8fafc',
+            }}
+          >
+            <p style={{ margin: 0, textAlign: 'center', fontSize: '13px', color: '#475569' }}>
+              このページはモバイルAR起動用の案内ページです。
+              <br />
+              スマートフォンでQRコードを読み取るとAR起動ボタンが有効になります。
+            </p>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '10px', marginTop: '18px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => navigate('/upload')}
+            style={{
+              padding: '12px 16px',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderRadius: '999px',
+              border: 'none',
+              background:
+                'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #4f46e5 100%)',
+              color: '#ffffff',
+              fontWeight: 600,
+              boxShadow: '0 10px 22px rgba(37, 99, 235, 0.30)',
+              flex: '1 1 220px',
+            }}
+          >
+            別のモデルをアップロード
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            style={{
+              padding: '12px 16px',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderRadius: '999px',
+              border: '1px solid #d1d5db',
+              background: '#ffffff',
+              color: '#0f172a',
+              fontWeight: 600,
+              flex: '1 1 160px',
+            }}
+          >
+            ホームへ戻る
+          </button>
         </div>
-      )}
-
-      {/* 데스크톱/기타 기기 안내 */}
-      {!isAndroid && !isIOS && (
-        <div
-          style={{
-            marginTop: '12px',
-            padding: '16px',
-            borderRadius: '8px',
-            border: '1px solid #ddd',
-            maxWidth: '500px',
-            width: '100%',
-            boxSizing: 'border-box',
-          }}
-        >
-          <p style={{ margin: 0, textAlign: 'center', fontSize: '14px' }}>
-            현재 AR 미리보기는 모바일 기기에서 사용하는 것이 가장 좋습니다.
-            <br />
-            스마트폰으로 QR 코드를 스캔하여 이 페이지에 접속하면
-            <br />
-            Android 기기에서 AR 모드로 확인할 수 있습니다.
-          </p>
-        </div>
-      )}
-
-      <button
-        type="button"
-        onClick={() => navigate('/upload')}
-        style={{
-          marginTop: '24px',
-          padding: '12px 24px',
-          fontSize: '16px',
-          cursor: 'pointer',
-          maxWidth: '400px',
-          width: '100%',
-        }}
-      >
-        다른 모델 업로드
-      </button>
-
-      <button
-        type="button"
-        onClick={() => navigate('/')}
-        style={{
-          padding: '12px 24px',
-          fontSize: '16px',
-          cursor: 'pointer',
-          maxWidth: '400px',
-          width: '100%',
-        }}
-      >
-        홈으로
-      </button>
+      </div>
     </main>
   );
 };

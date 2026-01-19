@@ -14,21 +14,21 @@ async function convertToUsdzWithThree(file: File): Promise<Blob> {
   const exporter = new USDZExporter();
   const loader = new GLTFLoader();
 
-  // GLTFLoader는 URL 로드를 주로 사용하므로 Blob URL을 생성
+  // GLTFLoader는 주로 URL 로드를 사용하므로 Blob URL을 생성한다
   const blobUrl = URL.createObjectURL(file);
 
   try {
     const gltf = await loader.loadAsync(blobUrl);
 
-    // USDZExporter는 THREE.Object3D(보통 scene)를 입력으로 받습니다.
-    // iOS Quick Look에서 모델이 안 보이는 상황을 줄이기 위해, 바운딩 박스 중심을 원점으로 이동합니다.
+    // USDZExporter는 THREE.Object3D(일반적으로 scene)을 입력으로 받는다.
+    // iOS Quick Look에서 모델이 잘 보이지 않는 상황을 줄이기 위해 바운딩 박스 중심을 원점으로 이동한다.
     const root = gltf.scene;
     const box = new THREE.Box3().setFromObject(root);
     const center = new THREE.Vector3();
     box.getCenter(center);
     root.position.sub(center);
 
-    // Exporter는 Scene 그래프를 탐색합니다.
+    // Exporter는 씬 그래프를 순회한다.
     const usdzArrayBuffer = await exporter.parseAsync(root);
 
     return new Blob([usdzArrayBuffer], { type: 'model/vnd.usdz+zip' });
@@ -60,7 +60,7 @@ const UploadPage: React.FC = () => {
     const isAllowed = allowedExtensions.some((ext) => lowerName.endsWith(ext));
 
     if (!isAllowed) {
-      setError('지원하지 않는 파일 형식입니다. glb/gltf/obj/fbx/stl 형식만 업로드할 수 있습니다.');
+      setError('対応していないファイル形式です。glb / gltf / obj / fbx / stl のみアップロードできます。');
       setSelectedFile(null);
       setPreviewURL(null);
       return;
@@ -72,7 +72,7 @@ const UploadPage: React.FC = () => {
 
   const handleUploadClick = async () => {
     if (!selectedFile) {
-      setError('먼저 3D 모델 파일을 선택해 주세요.');
+      setError('先に3Dモデルファイルを選択してください。');
       return;
     }
 
@@ -93,11 +93,11 @@ const UploadPage: React.FC = () => {
 
       if (uploadError) {
         console.error(uploadError);
-        throw new Error('업로드 실패');
+        throw new Error('アップロードに失敗しました');
       }
 
-      // iOS Quick Look(AR)용으로 GLB/GLTF는 USDZ가 필요합니다.
-      // 브라우저에서 Three.js USDZExporter로 변환 후 동일한 이름(.usdz)로 Supabase에 업로드합니다.
+      // iOS Quick Look(AR)에서는 GLB/GLTF 파일에 대해 USDZ 형식이 필요하다.
+      // 브라우저에서 Three.js USDZExporter로 변환한 뒤, 동일한 이름(.usdz)으로 Supabase에 업로드한다.
       const lowerSafeName = safeName.toLowerCase();
       const isGltfFamily = lowerSafeName.endsWith('.glb') || lowerSafeName.endsWith('.gltf');
 
@@ -115,10 +115,10 @@ const UploadPage: React.FC = () => {
             });
 
           if (usdzUploadError) {
-            console.error('usdz 업로드 실패(업로드 자체는 완료됨):', usdzUploadError);
+            console.error('USDZのアップロードに失敗しました（元ファイルのアップロードは完了しています）：', usdzUploadError);
           }
         } catch (convertError) {
-          console.error('브라우저 USDZ 변환 실패(업로드 자체는 완료됨):', convertError);
+          console.error('ブラウザでのUSDZ変換に失敗しました（元ファイルのアップロードは完了しています）：', convertError);
         }
       }
 
@@ -126,7 +126,7 @@ const UploadPage: React.FC = () => {
       setShareUrl(urlForShare);
     } catch (e) {
       console.error(e);
-      setError('업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      setError('アップロード中にエラーが発生しました。しばらくしてからもう一度お試しください。');
       setPreviewURL(null);
       setShareUrl(null);
     } finally {
@@ -135,137 +135,192 @@ const UploadPage: React.FC = () => {
     }
   };
 
+  const viewerRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    if (!previewURL || !viewerRef.current) return;
+
+    const container = viewerRef.current;
+    container.innerHTML = '';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 1, 3);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+    scene.add(light);
+
+    const loader = new GLTFLoader();
+    loader.load(previewURL, (gltf) => {
+      const model = gltf.scene;
+      scene.add(model);
+
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3()).length();
+      const center = box.getCenter(new THREE.Vector3());
+      model.position.sub(center);
+
+      camera.position.set(size * 0.5, size * 0.5, size * 1.5);
+      camera.lookAt(0, 0, 0);
+
+      renderer.render(scene, camera);
+    });
+
+    (async () => {
+      const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    })();
+
+    const handleResize = () => {
+      if (!container) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      renderer.dispose();
+    };
+  }, [previewURL]);
+
   return (
     <main
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '24px',
-        gap: '16px',
+        height: '100vh',
         width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '40px 16px',
+        background: 'radial-gradient(circle at top left, #f8fafc, #eef2ff, #e0e7ff)',
         boxSizing: 'border-box',
+        overflow: 'auto',
       }}
     >
-      <h1 style={{ margin: 0, fontSize: '24px' }}>3D 모델 업로드</h1>
-      <p style={{ margin: 0, color: '#555', textAlign: 'center' }}>
-        3D 모델을 업로드하고, 생성된 QR코드를 모바일로 스캔하여 AR로 확인하세요.
-      </p>
-
       <div
         style={{
-          marginTop: '16px',
-          maxWidth: '600px',
           width: '100%',
+          maxWidth: '720px',
+          background: '#ffffffcc',
+          backdropFilter: 'blur(6px)',
+          padding: '32px',
+          borderRadius: '16px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
+          gap: '20px',
         }}
       >
-        <input
-          type="file"
-          accept=".glb,.gltf,.obj,.fbx,.stl"
-          onChange={handleFileChange}
-          style={{
-            width: '100%',
-          }}
-        />
+        <div style={{ textAlign: 'center' }}>
+          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 700 }}>3Dモデルアップロード</h1>
+          <p style={{ marginTop: '8px', color: '#555', fontSize: '15px' }}>
+            3Dモデルをアップロードすると自動でQRコードが生成され、<br />
+            スマホですぐに確認できます。
+          </p>
+        </div>
 
-        {error && (
-          <div
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <label
             style={{
-              color: 'red',
+              fontWeight: 600,
+              marginBottom: '-4px',
               fontSize: '14px',
             }}
           >
-            {error}
+            ファイル選択
+          </label>
+
+          <input
+            type="file"
+            accept=".glb,.gltf,.obj,.fbx,.stl"
+            onChange={handleFileChange}
+            style={{
+              width: '94%',
+              padding: '12px',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              background: '#fff',
+            }}
+          />
+
+          {error && (
+            <div style={{ color: 'red', fontSize: '14px' }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleUploadClick}
+            disabled={isUploading}
+            style={{
+              marginTop: '8px',
+              padding: '14px 24px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isUploading ? '#94a3b8' : '#6366f1',
+              color: '#fff',
+              cursor: isUploading ? 'default' : 'pointer',
+              boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
+              transition: '0.2s',
+            }}
+          >
+            {isUploading ? 'アップロード中...' : 'アップロードしてQRを作成'}
+          </button>
+        </div>
+
+        {shareUrl && (
+          <div
+            style={{
+              marginTop: '24px',
+              padding: '20px',
+              borderRadius: '12px',
+              background: '#ffffff',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              textAlign: 'center',
+            }}
+          >
+            <p style={{ margin: '0 0 12px', fontSize: '15px' }}>
+              モバイルでAR表示するにはQRコードをスキャンしてください。
+            </p>
+            <QRCode value={shareUrl} size={160} />
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={handleUploadClick}
-          disabled={isUploading}
-          style={{
-            marginTop: '8px',
-            padding: '12px 24px',
-            fontSize: '16px',
-            cursor: isUploading ? 'default' : 'pointer',
-            opacity: isUploading ? 0.7 : 1,
-            width: '100%',
-          }}
-        >
-          {isUploading ? '업로드 중...' : '업로드'}
-        </button>
+        {previewURL && (
+          <div style={{ marginTop: '12px' }}>
+            <h2 style={{ fontSize: '18px', marginBottom: '8px', fontWeight: 600 }}>3Dプレビュー</h2>
+            <div
+              ref={viewerRef}
+              style={{
+                width: '100%',
+                height: '45vh',
+                background: '#ffffff',
+                borderRadius: '12px',
+                border: '1px solid #d1d5db',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+                overflow: 'hidden',
+              }}
+            />
+          </div>
+        )}
       </div>
-
-      {previewURL && (
-        <div
-          style={{
-            marginTop: '24px',
-            maxWidth: '600px',
-            width: '100%',
-          }}
-        >
-          <h2
-            style={{
-              fontSize: '18px',
-              margin: 0,
-              marginBottom: '8px',
-            }}
-          >
-            PC 미리보기
-          </h2>
-          <div
-            style={{
-              width: '100%',
-              height: '50vh',
-              background: '#f0f0f0',
-              borderRadius: '8px',
-              border: '1px solid #ddd',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              padding: '16px',
-              boxSizing: 'border-box',
-            }}
-          >
-            <p style={{ margin: 0, fontSize: '14px', color: '#555' }}>
-              현재 PC 브라우저에서는 3D 모델 실시간 미리보기를 제공하지 않습니다.
-              <br />
-              모바일에서 QR코드를 스캔하여 AR로 확인해 주세요.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {shareUrl && (
-        <div
-          style={{
-            marginTop: '24px',
-            padding: '16px',
-            background: '#ffffff',
-            borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            maxWidth: '320px',
-            width: '100%',
-          }}
-        >
-          <p
-            style={{
-              margin: '0 0 8px 0',
-              fontSize: '14px',
-              textAlign: 'center',
-            }}
-          >
-            모바일에서 AR로 보려면 QR코드를 스캔하세요.
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <QRCode value={shareUrl} size={160} />
-          </div>
-        </div>
-      )}
     </main>
   );
 };
