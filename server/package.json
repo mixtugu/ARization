@@ -7,12 +7,13 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
     "express": "^4.19.0",
-    "@supabase/supabase-js": "^2.0.0"
+    "three": "^0.182.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
+    "@types/express": "^4.17.0",
     "@types/node": "^22.0.0",
-    "@types/express": "^4.17.0"
+    "typescript": "^5.0.0"
   }
 }

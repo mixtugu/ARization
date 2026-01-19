@@ -1,11 +1,41 @@
 import React, { useState } from 'react';
 import QRCode from 'react-qr-code';
 import { createClient } from '@supabase/supabase-js';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { USDZExporter } from 'three/examples/jsm/exporters/USDZExporter.js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+async function convertToUsdzWithThree(file: File): Promise<Blob> {
+  const exporter = new USDZExporter();
+  const loader = new GLTFLoader();
+
+  // GLTFLoader는 URL 로드를 주로 사용하므로 Blob URL을 생성
+  const blobUrl = URL.createObjectURL(file);
+
+  try {
+    const gltf = await loader.loadAsync(blobUrl);
+
+    // USDZExporter는 THREE.Object3D(보통 scene)를 입력으로 받습니다.
+    // iOS Quick Look에서 모델이 안 보이는 상황을 줄이기 위해, 바운딩 박스 중심을 원점으로 이동합니다.
+    const root = gltf.scene;
+    const box = new THREE.Box3().setFromObject(root);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    root.position.sub(center);
+
+    // Exporter는 Scene 그래프를 탐색합니다.
+    const usdzArrayBuffer = await exporter.parseAsync(root);
+
+    return new Blob([usdzArrayBuffer], { type: 'model/vnd.usdz+zip' });
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
+}
 
 const UploadPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -66,29 +96,29 @@ const UploadPage: React.FC = () => {
         throw new Error('업로드 실패');
       }
 
-      // glb 파일인 경우, 서버에 usdz 변환 요청
+      // iOS Quick Look(AR)용으로 GLB/GLTF는 USDZ가 필요합니다.
+      // 브라우저에서 Three.js USDZExporter로 변환 후 동일한 이름(.usdz)로 Supabase에 업로드합니다.
       const lowerSafeName = safeName.toLowerCase();
-      const isGlb = lowerSafeName.endsWith('.glb');
+      const isGltfFamily = lowerSafeName.endsWith('.glb') || lowerSafeName.endsWith('.gltf');
 
-      if (isGlb) {
+      if (isGltfFamily) {
         try {
-          const apiBase =
-            (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
-            window.location.origin;
+          const usdzBlob = await convertToUsdzWithThree(selectedFile);
+          const usdzKey = fileName.replace(/\.(glb|gltf)$/i, '.usdz');
 
-          await fetch(`${apiBase.replace(/\/$/, '')}/api/convert-usdz`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              bucket: 'models',
-              key: fileName, // 예: 1768...__.glb
-              // 필요하다면 추가 메타데이터를 여기에 포함
-            }),
-          });
+          const { error: usdzUploadError } = await supabase
+            .storage
+            .from('models')
+            .upload(usdzKey, usdzBlob, {
+              upsert: true,
+              contentType: 'model/vnd.usdz+zip',
+            });
+
+          if (usdzUploadError) {
+            console.error('usdz 업로드 실패(업로드 자체는 완료됨):', usdzUploadError);
+          }
         } catch (convertError) {
-          console.error('usdz 변환 요청 중 오류 발생(업로드 자체는 완료됨):', convertError);
+          console.error('브라우저 USDZ 변환 실패(업로드 자체는 완료됨):', convertError);
         }
       }
 
