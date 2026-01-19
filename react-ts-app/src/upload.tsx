@@ -66,7 +66,7 @@ const UploadPage: React.FC = () => {
         throw new Error('업로드 실패');
       }
 
-      const urlForShare = `${window.location.origin}/ar?key=${encodeURIComponent(fileName)}`;
+      const urlForShare = `${window.location.origin}/#/ar?key=${encodeURIComponent(fileName)}`;
       setShareUrl(urlForShare);
     } catch (e) {
       console.error(e);

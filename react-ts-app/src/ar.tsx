@@ -13,6 +13,7 @@ const ArPage: React.FC = () => {
   const [modelUrl, setModelUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [usdzUrl, setUsdzUrl] = useState<string | null>(null);
 
   // 단순 UA 기반 플랫폼 판별
   const isIOS =
@@ -44,6 +45,18 @@ const ArPage: React.FC = () => {
           setError('모델을 불러올 수 없습니다.');
         } else {
           setModelUrl(data.signedUrl);
+
+          // iOS용 Quick Look을 위한 usdz 파일도 시도 (같은 이름 + .usdz 확장자 가정)
+          const usdzKey = key.replace(/\.[^/.]+$/, '.usdz');
+          if (usdzKey !== key) {
+            const { data: usdzData } = await supabase.storage
+              .from('models')
+              .createSignedUrl(usdzKey, 60 * 60);
+
+            if (usdzData?.signedUrl) {
+              setUsdzUrl(usdzData.signedUrl);
+            }
+          }
         }
       } catch (e) {
         console.error(e);
@@ -177,7 +190,7 @@ const ArPage: React.FC = () => {
         </>
       )}
 
-      {/* iOS: Quick Look(usdz) 준비 전 안내 */}
+      {/* iOS: Quick Look(usdz) 지원 */}
       {isIOS && (
         <div
           style={{
@@ -190,15 +203,40 @@ const ArPage: React.FC = () => {
             boxSizing: 'border-box',
           }}
         >
-          <p style={{ margin: 0, textAlign: 'center', fontSize: '14px' }}>
-            현재 iOS AR Quick Look은 <code>usdz</code> 형식을 사용합니다.
-            <br />
-            이 링크는 Android 기기에서 AR로 확인하는 데 최적화되어 있습니다.
-            <br />
-            추후 iOS용 usdz 변환 기능이 추가되면,
-            <br />
-            iPhone에서도 바로 AR 보기 버튼이 제공될 예정입니다.
-          </p>
+          {usdzUrl ? (
+            <>
+              <p style={{ margin: 0, textAlign: 'center', fontSize: '14px' }}>
+                아래 버튼을 눌러 iOS AR Quick Look에서 모델을 확인할 수 있습니다.
+              </p>
+              <a
+                href={usdzUrl}
+                rel="ar"
+                style={{
+                  marginTop: '12px',
+                  display: 'block',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  textDecoration: 'none',
+                  borderRadius: '8px',
+                  border: '1px solid #333',
+                  maxWidth: '400px',
+                  width: '100%',
+                  textAlign: 'center',
+                  boxSizing: 'border-box',
+                }}
+              >
+                iOS에서 AR로 보기
+              </a>
+            </>
+          ) : (
+            <p style={{ margin: 0, textAlign: 'center', fontSize: '14px' }}>
+              현재 iOS AR Quick Look은 <code>usdz</code> 형식을 사용합니다.
+              <br />
+              이 모델과 동일한 이름의 <code>.usdz</code> 파일이 준비되면,
+              <br />
+              iPhone에서도 바로 AR 보기 버튼이 제공됩니다.
+            </p>
+          )}
         </div>
       )}
 
