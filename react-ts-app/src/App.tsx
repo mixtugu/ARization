@@ -1,4 +1,3 @@
-import React from 'react'
 import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import './App.css'
 import Header from './Header'
