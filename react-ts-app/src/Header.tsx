@@ -59,15 +59,17 @@ const Header: React.FC = () => {
           </span>
         </div>
 
-        {/* Right meta */}
-        <div
+        {/* Right logo */}
+        <img
+          src="/wtnv.svg"
+          alt="WTNV"
           style={{
-            fontSize: '11px',
-            color: '#94a3b8',
+            height: '40px',
+            width: 'auto',
+            opacity: 0.85,
           }}
-        >
-          Web-based AR Preview
-        </div>
+        />
+        
       </div>
     </header>
   );
