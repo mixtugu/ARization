@@ -1,5 +1,7 @@
 import express = require('express');
-import { convertRouter } from './convert-usdz';
+import * as path from 'node:path';
+import { createConvertRouter, isConvertUsdzEnabled } from './convert-usdz';
+import { libraryModelsDir, libraryRouter } from './library-models';
 
 const app = express();
 
@@ -12,7 +14,13 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(convertRouter);
+if (isConvertUsdzEnabled()) {
+  app.use(createConvertRouter());
+} else {
+  console.warn('convert-usdz disabled: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+}
+app.use(libraryRouter);
+app.use('/library-models', express.static(path.resolve(libraryModelsDir)));
 
 app.get('/', (_req, res) => {
   res.send('convert-usdz server is running');
@@ -21,4 +29,5 @@ app.get('/', (_req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
+  console.log(`Library models dir: ${libraryModelsDir}`);
 });

@@ -10,6 +10,8 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const ArPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const isLibraryModel = Boolean(searchParams.get('local'));
   const [modelUrl, setModelUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -24,10 +26,11 @@ const ArPage: React.FC = () => {
     typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
     const key = searchParams.get('key');
+    const local = searchParams.get('local');
+    const localUsdz = searchParams.get('localUsdz');
 
-    if (!key) {
+    if (!key && !local) {
       setError('モデル情報がありません。有効なリンクか確認してください。');
       setLoading(false);
       return;
@@ -35,10 +38,21 @@ const ArPage: React.FC = () => {
 
     const fetchUrl = async () => {
       try {
+        if (local) {
+          const normalizedLocal = local.replace(/^\/+/, '');
+          setModelUrl(`/library-models/${encodeURIComponent(normalizedLocal)}`);
+          setUsdzUrl(
+            localUsdz
+              ? `/library-models/${encodeURIComponent(localUsdz.replace(/^\/+/, ''))}`
+              : null,
+          );
+          return;
+        }
+
         // 서명 URL을 생성하여 외부(구글 Scene Viewer)에서도 접근 가능하게 함
         const { data, error } = await supabase.storage
           .from('models')
-          .createSignedUrl(key, 60 * 60); // 1시간 유효
+          .createSignedUrl(key as string, 60 * 60); // 1시간 유효
 
         if (error || !data?.signedUrl) {
           console.error(error);
@@ -47,7 +61,7 @@ const ArPage: React.FC = () => {
           setModelUrl(data.signedUrl);
 
           // iOS용 Quick Look을 위한 usdz 파일도 시도 (같은 이름 + .usdz 확장자 가정)
-          const usdzKey = key.replace(/\.[^/.]+$/, '.usdz');
+          const usdzKey = (key as string).replace(/\.[^/.]+$/, '.usdz');
           if (usdzKey !== key) {
             const { data: usdzData } = await supabase.storage
               .from('models')
@@ -66,7 +80,7 @@ const ArPage: React.FC = () => {
       }
     };
 
-    fetchUrl();
+    void fetchUrl();
   }, [location.search]);
 
   // Android용 Scene Viewer 링크 생성
@@ -226,43 +240,65 @@ const ArPage: React.FC = () => {
           </p>
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '18px', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => navigate('/upload')}
-              style={{
-                padding: '12px 16px',
-                fontSize: '14px',
-                cursor: 'pointer',
-                borderRadius: '999px',
-                border: 'none',
-                background:
-                  'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #4f46e5 100%)',
-                color: '#ffffff',
-                fontWeight: 600,
-                boxShadow: '0 10px 22px rgba(37, 99, 235, 0.30)',
-                flex: '1 1 220px',
-              }}
-            >
-              アップロードへ戻る
-            </button>
+            {isLibraryModel ? (
+              <button
+                type="button"
+                onClick={() => navigate('/library')}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  borderRadius: '999px',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  fontWeight: 600,
+                  flex: '1 1 220px',
+                }}
+              >
+                ライブラリへ戻る
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate('/upload')}
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    borderRadius: '999px',
+                    border: 'none',
+                    background:
+                      'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #4f46e5 100%)',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    boxShadow: '0 10px 22px rgba(37, 99, 235, 0.30)',
+                    flex: '1 1 220px',
+                  }}
+                >
+                  アップロードへ戻る
+                </button>
 
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              style={{
-                padding: '12px 16px',
-                fontSize: '14px',
-                cursor: 'pointer',
-                borderRadius: '999px',
-                border: '1px solid #d1d5db',
-                background: '#ffffff',
-                color: '#0f172a',
-                fontWeight: 600,
-                flex: '1 1 160px',
-              }}
-            >
-              ホームへ戻る
-            </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    borderRadius: '999px',
+                    border: '1px solid #d1d5db',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    fontWeight: 600,
+                    flex: '1 1 160px',
+                  }}
+                >
+                  ホームへ戻る
+                </button>
+              </>
+            )}
           </div>
         </div>
       </main>
@@ -323,9 +359,6 @@ const ArPage: React.FC = () => {
               AR PREVIEW
             </span>
           </div>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-            Android: Scene Viewer · iOS: Quick Look
-          </span>
         </div>
 
         <h1
@@ -339,23 +372,21 @@ const ArPage: React.FC = () => {
         >
           モバイルでARを確認
         </h1>
-        <p style={{ margin: '10px 0 0', fontSize: '13px', color: '#64748b' }}>
-          ご利用のデバイスに合わせてARモードを起動してください。
-        </p>
 
         {/* Android */}
         {isAndroid && (
           <div
             style={{
               marginTop: '16px',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb',
-              background: '#f8fafc',
+              padding: '18px',
+              borderRadius: '16px',
+              border: '1px solid #bfdbfe',
+              background: 'linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%)',
+              boxShadow: '0 18px 32px rgba(37, 99, 235, 0.12)',
             }}
           >
-            <p style={{ margin: 0, textAlign: 'center', fontSize: '13px', color: '#475569' }}>
-              下のボタンを押して<strong>Google Scene Viewer</strong>でARを起動してください。
+            <p style={{ margin: 0, textAlign: 'center', fontSize: '12px', color: '#2563eb', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              <strong>Google Scene Viewer</strong>
             </p>
             <a
               href={buildAndroidHref(modelUrl)}
@@ -363,24 +394,21 @@ const ArPage: React.FC = () => {
               style={{
                 marginTop: '12px',
                 display: 'block',
-                padding: '12px 16px',
-                fontSize: '14px',
+                padding: '16px 18px',
+                fontSize: '16px',
                 textDecoration: 'none',
                 borderRadius: '999px',
                 border: 'none',
                 background:
                   'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #4f46e5 100%)',
                 color: '#ffffff',
-                fontWeight: 700,
+                fontWeight: 800,
                 textAlign: 'center',
-                boxShadow: '0 10px 22px rgba(37, 99, 235, 0.30)',
+                boxShadow: '0 16px 30px rgba(37, 99, 235, 0.32)',
               }}
             >
               AndroidでAR起動
             </a>
-            <p style={{ margin: '10px 0 0', fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>
-              ARが起動しない場合はChromeで開いてください。
-            </p>
           </div>
         )}
 
@@ -389,16 +417,17 @@ const ArPage: React.FC = () => {
           <div
             style={{
               marginTop: '16px',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb',
-              background: '#f8fafc',
+              padding: '18px',
+              borderRadius: '16px',
+              border: '1px solid #bfdbfe',
+              background: 'linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%)',
+              boxShadow: '0 18px 32px rgba(37, 99, 235, 0.12)',
             }}
           >
             {usdzUrl ? (
               <>
-                <p style={{ margin: 0, textAlign: 'center', fontSize: '13px', color: '#475569' }}>
-                  下のボタンを押して<strong>AR Quick Look</strong>でモデルを確認してください。
+                <p style={{ margin: 0, textAlign: 'center', fontSize: '12px', color: '#2563eb', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  <strong>AR Quick Look</strong>
                 </p>
                 <a
                   href={usdzUrl}
@@ -406,28 +435,25 @@ const ArPage: React.FC = () => {
                   style={{
                     marginTop: '12px',
                     display: 'block',
-                    padding: '12px 16px',
-                    fontSize: '14px',
+                    padding: '16px 18px',
+                    fontSize: '16px',
                     textDecoration: 'none',
                     borderRadius: '999px',
-                    border: '1px solid #d1d5db',
-                    background: '#ffffff',
-                    color: '#0f172a',
-                    fontWeight: 700,
+                    border: 'none',
+                    background:
+                      'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #4f46e5 100%)',
+                    color: '#ffffff',
+                    fontWeight: 800,
                     textAlign: 'center',
+                    boxShadow: '0 16px 30px rgba(37, 99, 235, 0.32)',
                   }}
                 >
                   iOSでAR起動
                 </a>
-                <p style={{ margin: '10px 0 0', fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>
-                  Safariで開くと最も安定して動作します。
-                </p>
               </>
             ) : (
               <p style={{ margin: 0, textAlign: 'center', fontSize: '13px', color: '#475569' }}>
-                iOSのAR Quick Lookは<code>usdz</code>形式を使用します。
-                <br />
-                同じ名前の<code>.usdz</code>が用意されていれば、iPhoneでもすぐにAR起動ボタンが表示されます。
+                iOS用の<code>usdz</code>ファイルがありません。
               </p>
             )}
           </div>
@@ -445,51 +471,69 @@ const ArPage: React.FC = () => {
             }}
           >
             <p style={{ margin: 0, textAlign: 'center', fontSize: '13px', color: '#475569' }}>
-              このページはモバイルAR起動用の案内ページです。
-              <br />
-              スマートフォンでQRコードを読み取るとAR起動ボタンが有効になります。
+              スマートフォンで開くとAR起動ボタンが表示されます。
             </p>
           </div>
         )}
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '18px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={() => navigate('/upload')}
-            style={{
-              padding: '12px 16px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              borderRadius: '999px',
-              border: 'none',
-              background:
-                'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #4f46e5 100%)',
-              color: '#ffffff',
-              fontWeight: 600,
-              boxShadow: '0 10px 22px rgba(37, 99, 235, 0.30)',
-              flex: '1 1 220px',
-            }}
-          >
-            別のモデルをアップロード
-          </button>
+          {isLibraryModel ? (
+            <button
+              type="button"
+              onClick={() => navigate('/library')}
+              style={{
+                padding: '12px 16px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                borderRadius: '999px',
+                border: '1px solid #d1d5db',
+                background: '#ffffff',
+                color: '#0f172a',
+                fontWeight: 600,
+                flex: '1 1 220px',
+              }}
+            >
+              ライブラリへ戻る
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => navigate('/upload')}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  borderRadius: '999px',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#334155',
+                  fontWeight: 600,
+                  flex: '1 1 220px',
+                }}
+              >
+                別のモデルをアップロード
+              </button>
 
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            style={{
-              padding: '12px 16px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              borderRadius: '999px',
-              border: '1px solid #d1d5db',
-              background: '#ffffff',
-              color: '#0f172a',
-              fontWeight: 600,
-              flex: '1 1 160px',
-            }}
-          >
-            ホームへ戻る
-          </button>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  borderRadius: '999px',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  fontWeight: 600,
+                  flex: '1 1 160px',
+                }}
+              >
+                ホームへ戻る
+              </button>
+            </>
+          )}
         </div>
       </div>
     </main>

@@ -4,6 +4,7 @@ import Header from './Header'
 import UploadPage from './upload'
 import ArPage from './ar'
 import Admin from './Admin'
+import LocalModelList from './LocalModelList'
 
 function HomePage() {
   const navigate = useNavigate()
@@ -260,6 +261,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/upload" element={<UploadPage />} />
+        <Route path="/library" element={<LocalModelList />} />
         <Route path="/ar" element={<ArPage />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
