@@ -7,6 +7,18 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+function toAbsoluteUrl(url: string) {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  if (typeof window === 'undefined') {
+    return url;
+  }
+
+  return new URL(url, window.location.origin).toString();
+}
+
 const ArPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -40,10 +52,14 @@ const ArPage: React.FC = () => {
       try {
         if (local) {
           const normalizedLocal = local.replace(/^\/+/, '');
-          setModelUrl(`/library-models/${encodeURIComponent(normalizedLocal)}`);
+          setModelUrl(
+            toAbsoluteUrl(`/library-models/${encodeURIComponent(normalizedLocal)}`),
+          );
           setUsdzUrl(
             localUsdz
-              ? `/library-models/${encodeURIComponent(localUsdz.replace(/^\/+/, ''))}`
+              ? toAbsoluteUrl(
+                  `/library-models/${encodeURIComponent(localUsdz.replace(/^\/+/, ''))}`,
+                )
               : null,
           );
           return;
@@ -87,7 +103,7 @@ const ArPage: React.FC = () => {
   const buildAndroidHref = (url: string) => {
     const base = 'https://arvr.google.com/scene-viewer/1.0';
     const params = new URLSearchParams({
-      file: url,
+      file: toAbsoluteUrl(url),
       mode: 'ar_only', // 필요시 ar_preferred 로 변경 가능
     });
     return `${base}?${params.toString()}`;
