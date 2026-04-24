@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const surveyFormUrl = 'https://forms.gle/oAamTAAp4LHUiK1P8';
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -494,23 +495,71 @@ const ArPage: React.FC = () => {
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '18px', flexWrap: 'wrap' }}>
           {isLibraryModel ? (
-            <button
-              type="button"
-              onClick={() => navigate('/library')}
-              style={{
-                padding: '12px 16px',
-                fontSize: '14px',
-                cursor: 'pointer',
-                borderRadius: '999px',
-                border: '1px solid #d1d5db',
-                background: '#ffffff',
-                color: '#0f172a',
-                fontWeight: 600,
-                flex: '1 1 220px',
-              }}
-            >
-              ライブラリへ戻る
-            </button>
+            <>
+              <p
+                style={{
+                  width: '100%',
+                  margin: '0 0 2px',
+                  fontSize: '17px',
+                  fontWeight: 800,
+                  color: '#334155',
+                  textAlign: 'center',
+                  lineHeight: 1.5,
+                }}
+              >
+                体験後、簡単なオンラインアンケートをお願いします！
+              </p>
+              <p
+                style={{
+                  width: '100%',
+                  margin: '0 0 4px',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  color: '#334155',
+                  textAlign: 'center',
+                }}
+              >
+                1分程度・選択式5問
+              </p>
+              <a
+                href={surveyFormUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  padding: '14px 18px',
+                  fontSize: '16px',
+                  borderRadius: '999px',
+                  background: 'linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%)',
+                  color: '#1d4ed8',
+                  fontWeight: 800,
+                  flex: '1 1 220px',
+                  textDecoration: 'none',
+                  textAlign: 'center',
+                  boxSizing: 'border-box',
+                  border: '1px solid #93c5fd',
+                  boxShadow: '0 12px 24px rgba(37, 99, 235, 0.18)',
+                }}
+              >
+                アンケートに答える
+              </a>
+              <button
+                type="button"
+                onClick={() => navigate('/library')}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  borderRadius: '999px',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  fontWeight: 600,
+                  flex: '1 1 220px',
+                }}
+              >
+                ライブラリへ戻る
+              </button>
+            </>
           ) : (
             <>
               <button

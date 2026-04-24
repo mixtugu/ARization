@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { listLocalModels, type LocalModelItem } from './localModelApi';
 
+const surveyFormUrl = 'https://forms.gle/oAamTAAp4LHUiK1P8';
+
 function formatFileSize(size: number) {
   if (size < 1024 * 1024) {
     return `${(size / 1024).toFixed(1)} KB`;
@@ -74,6 +76,49 @@ const LocalModelList: React.FC = () => {
             <h1 style={{ margin: '14px 0 0', fontSize: '28px', color: '#0f172a' }}>
               モデル一覧
             </h1>
+            <p
+              style={{
+                margin: '14px 0 0',
+                fontSize: '17px',
+                fontWeight: 800,
+                color: '#334155',
+                lineHeight: 1.5,
+              }}
+            >
+              体験後、簡単なオンラインアンケートをお願いします！
+            </p>
+            <p
+              style={{
+                margin: '6px 0 0',
+                fontSize: '15px',
+                fontWeight: 700,
+                color: '#334155',
+              }}
+            >
+              1分程度・選択式5問
+            </p>
+            <a
+              href={surveyFormUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                marginTop: '14px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '14px 22px',
+                borderRadius: '999px',
+                background: 'linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%)',
+                color: '#1d4ed8',
+                textDecoration: 'none',
+                fontSize: '16px',
+                fontWeight: 800,
+                boxShadow: '0 12px 24px rgba(37, 99, 235, 0.18)',
+                border: '1px solid #93c5fd',
+              }}
+            >
+              アンケートに答える
+            </a>
           </div>
         </div>
 
